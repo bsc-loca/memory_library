@@ -317,12 +317,12 @@ generate
       end
    end
    else begin
-      always @ *
+      always @ (posedge clk)
       begin
-         bist_index = 0;
-         bist_index_next = 0;
-         init_done = 1;
-         init_done_next = 0;
+         bist_index <= 0;
+         bist_index_next <= 0;
+         init_done <= 1;
+         init_done_next <= 0;
       end
    end
 endgenerate
