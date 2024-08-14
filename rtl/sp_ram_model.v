@@ -32,13 +32,17 @@ module sp_ram_model #(
     //RDWEN = 1 means write, 0 means read
     
     // SRAM
+    (* ram_style = "block" *)
     reg [DATA_WIDTH-1:0] ram [DEPTH-1:0];
     reg [DATA_WIDTH-1  : 0] DATA_OUT;
+    reg [$clog2(DATA_WIDTH) :0] itr_bw;
     
     always@(posedge CLK) begin
         if(CE) begin
             if(RDWEN)
-                ram[A] <= (DI & BW) | (ram[A] & ~BW);
+                for (itr_bw = 0; itr_bw < DATA_WIDTH; itr_bw = itr_bw+1) begin
+                  if (BW[itr_bw]) ram[A][itr_bw] <= DI[itr_bw];
+                end
             else
                 DATA_OUT <= ram[A];
         end
