@@ -32,7 +32,6 @@ module sp_ram_model #(
     //RDWEN = 1 means write, 0 means read
     
     // SRAM
-    (* ram_style = "block" *)
     reg [DATA_WIDTH-1:0] ram [DEPTH-1:0];
     reg [DATA_WIDTH-1  : 0] DATA_OUT;
     reg [$clog2(DATA_WIDTH) :0] itr_bw;

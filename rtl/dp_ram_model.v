@@ -111,7 +111,6 @@ assign bram_write_en      = write_enable_in_reg;
 assign bram_read_en         = ((read_enable_in) & ~rw_conflict); //added BIST mux for reading             // do not read in case of a conflict
 assign bram_write_read_en         = (write_enable_in) & ~ww_conflict;             // do not read in case of a conflict
 
-(* ram_style = "block" *)
 reg [DATA_WIDTH-1:0] ram [DEPTH-1:0];
 // reg [%d-1:0] bram_data_write_read_out_reg;
 always @(posedge CLKA) begin
