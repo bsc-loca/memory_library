@@ -75,6 +75,7 @@ generate if (INSTANTIATE_ASIC_MEMORY == 1) begin
         .ADDR_WIDTH(ADDR_WIDTH), 
         .DATA_WIDTH(DATA_WIDTH)
     ) dp_ram(
+       .rst_n (rst_n), // Required for write_bypass on read/write collisions to the same address
        .AA   (mux_rd_addr),
        .AB   (mux_wr_addr),
        .DB   (mux_data_in),
