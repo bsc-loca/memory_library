@@ -75,18 +75,13 @@ reg  [DATA_WIDTH-1:0] mux_data_mask_in_r;
 wire [DATA_WIDTH-1:0] QA;
 
 // write_bypass on read/write collisions to the same address
-//NOTE: keep bypassed data constant until a new read operation arrives!
 always @(posedge clk) begin
     if(!rst_n) begin
         read_write_collision_r <= 1'b0;
     end else begin
-        if (read_write_collision) begin
-            read_write_collision_r <= 1'b1;
-            mux_data_in_r          <= mux_data_in;
-            mux_data_mask_in_r     <= mux_data_mask_in;
-        end else if (mux_rd_en) begin
-            read_write_collision_r <= 1'b0;
-        end
+        read_write_collision_r <= read_write_collision;
+        mux_data_in_r          <= mux_data_in;
+        mux_data_mask_in_r     <= mux_data_mask_in;
     end
 end
 
