@@ -55,6 +55,19 @@ always @(posedge CLKA) begin
     end
 end
 
+// Assertions
+logic rw_collision_d;
+always @(posedge CLKA)
+    rw_collision_d <= CEA && CEB && (AA == AB);
+
+property check_signal_no_unknown;
+  @(posedge CLKA) disable iff (rw_collision_d != 1)
+  ($isunknown(QA));
+endproperty
+
+assert property (check_signal_no_unknown) else $info("NO WORRIES SVA ERROR below is expected: output data: 0x%X time: %0t", QA, $time);
+
+
 // detect a read/write collision
 // assign read_write_collision = (mux_rd_en && mux_wr_en && (mux_rd_addr == mux_wr_addr));
 assign read_write_collision = (CEA && CEB && (AA == AB));
