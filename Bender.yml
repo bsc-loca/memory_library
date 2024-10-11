@@ -14,15 +14,11 @@ sources:
       - rtl/dp_ram.v
 
   - target: any(fpga, simulation)
-    include_dirs:
-      - include/
     files:
       - rtl/sp_ram_model.v
       - rtl/dp_ram_model.v     
 
   - target: asic
-    include_dirs:
-      - include/
     files:
       - rtl/sp_ram_asic.v
       - rtl/dp_ram_asic.sv

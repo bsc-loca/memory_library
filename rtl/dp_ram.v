@@ -24,6 +24,8 @@
 // clock cycle to one address. This procedure requires a number of clk cycles that
 // are determined by memory's depth: 2^ADDR_WIDTH
 
+`include "bist_define.h"
+
 module dp_ram
 #(
     parameter ADDR_WIDTH=1, 
