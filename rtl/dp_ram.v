@@ -50,6 +50,15 @@ module dp_ram
     input wire  [`SRAM_WRAPPER_BUS_WIDTH-1:0] rtap_srams_bist_data
 );
 
+/* Uncomment to see all the instantiated memories
+  initial begin
+    // Print parameters at the start of the simulation
+    $display("Instance: %m");
+    $display("DP_RAM ADDR_WIDTH: %d", ADDR_WIDTH);
+    $display("DP_RAM DATA_WIDTH: %d", DATA_WIDTH);
+  end
+*/
+
 reg [ADDR_WIDTH-1:0] mux_rd_addr;
 reg [ADDR_WIDTH-1:0] mux_wr_addr;     
 reg [DATA_WIDTH-1:0] mux_data_in;     
