@@ -1,5 +1,5 @@
 /* -----------------------------------------------
-* File           : sp_ram_asic.sv
+* File           : sp_ram_asic.v
 * Organization   : Barcelona Supercomputing Center
 * Author(s)      : Junaid Ahmed; Xabier Abancens
 * Email(s)       : {author}@bsc.es
