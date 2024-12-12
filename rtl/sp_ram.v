@@ -49,14 +49,14 @@ module sp_ram
     input wire  [`SRAM_WRAPPER_BUS_WIDTH-1:0] rtap_srams_bist_data
 );
 
-/* Uncomment to see all the instantiated memories
+`ifdef PRINT_MEMORY_LIST
   initial begin
     // Print parameters at the start of the simulation
     $display("Instance: %m");
     $display("SP_RAM ADDR_WIDTH: %d", ADDR_WIDTH);
     $display("SP_RAM DATA_WIDTH: %d", DATA_WIDTH);
   end
-*/
+`endif
 
 reg [ADDR_WIDTH-1:0] mux_addr;    
 reg [DATA_WIDTH-1:0] mux_data_in;     
