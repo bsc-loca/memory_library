@@ -23,6 +23,7 @@
 // INIT_MEMORY_ON_RESET=1: on reset memory is initialize to zero by writing in each 
 // clock cycle to one address. This procedure requires a number of clk cycles that
 // are determined by memory's depth: 2^ADDR_WIDTH
+// See README.md for more information
 
 `include "bist_define.h"
 
@@ -31,7 +32,8 @@ module sp_ram
     parameter ADDR_WIDTH=1, 
     parameter DATA_WIDTH=1,
     parameter INSTANTIATE_ASIC_MEMORY = 1, // 0: simulation/FPGA model; 1: ASIC physical memories
-    parameter INIT_MEMORY_ON_RESET = 0
+    parameter INIT_MEMORY_ON_RESET = 0,
+    parameter SRAM_CHUNK_ID = 8'h00
 )(
     input wire [7:0] SR_ID,
     input wire clk,
@@ -122,7 +124,7 @@ reg [512-1:0] DATA_reg_next, DATA_OUT_reg_next; //maximum width of an SRAM to re
 reg BIST_RDWEN_reg, BIST_RDWEN_next;
 reg BIST_EN_reg, BIST_EN_next;
 //wires
-reg [3:0] BIST_DOUT_reg,BIST_DOUT_next; //4 bits BIST transimission
+reg [3:0] BIST_DOUT_reg,BIST_DOUT_next; //4 bits BIST transmission
 //counter variables
 reg [5:0]count;
 reg [6:0]count_next;
@@ -175,7 +177,7 @@ always@(*) begin
             end
          end
          ID: begin
-            if((BIST_COMMAND == `BIST_OP_SHIFT_ID) && ({ID_reg,BIST_DIN} == SR_ID)) 
+            if((BIST_COMMAND == `BIST_OP_SHIFT_ID) && ({ID_reg,BIST_DIN} == SR_ID))  //checking SRAM ID
                state_next  = BSEL;
             else
                state_next  = IDLE;
@@ -184,8 +186,13 @@ always@(*) begin
             if(BIST_COMMAND == `BIST_OP_SHIFT_BSEL) begin
                BSEL_reg_next = {BSEL_reg[3:0] , BIST_DIN};
                if(count == 1) begin
-                  state_next = ADDR;
                   count_next = 0;
+                  if({BSEL_reg[3:0] , BIST_DIN} == SRAM_CHUNK_ID) begin //checking chunk ID
+                     state_next = ADDR;
+                  end
+                  else begin
+                     state_next = IDLE;
+                  end
                end
                else begin
                   state_next = BSEL;
@@ -196,7 +203,7 @@ always@(*) begin
                state_next = IDLE;
          end
          ADDR: begin
-            ADDR_reg_next   = {ADDR_reg[11:0] , BIST_DIN};
+            ADDR_reg_next   = {ADDR_reg[11:0] , BIST_DIN};                  //16 bit address collection
             if((count == 3) &&  (BIST_COMMAND == `BIST_OP_SHIFT_ADDRESS)) begin
                state_next   = READ_WRITE_CHECK;
                BIST_EN_next = 1;
@@ -218,7 +225,7 @@ always@(*) begin
             else if(BIST_COMMAND == `BIST_OP_SHIFT_DATA) begin //write request
                state_next      = RECV_DATA;
                count_next      = 1; //first packet is sampled on clock edge
-               DATA_reg_next   = {DATA_reg[(`JTAG_DATA_REQ_WIDTH-4)-1:0],BIST_DIN}; 
+               DATA_reg_next   = {DATA_reg[(`JTAG_DATA_REQ_WIDTH-4)-1:0],BIST_DIN};  //collecting data for write operation
             end 
             else
                state_next      = IDLE;
@@ -228,7 +235,7 @@ always@(*) begin
             count_next    = 0;
             state_next     = SEND_DATA;
          end
-         SEND_DATA: begin
+         SEND_DATA: begin //sending data after reading SRAM to the JTAG (64*4 = 256 bits)
                if((BIST_COMMAND == `BIST_OP_SHIFT_DATA) && (count < 63)) begin
                   BIST_DOUT_next     = DATA_OUT_reg[`JTAG_DATA_RES_WIDTH-1: `JTAG_DATA_RES_WIDTH-4]; //255:252
                   DATA_OUT_reg_next  = {DATA_OUT_reg[(`JTAG_DATA_RES_WIDTH-4)-1:0], 4'b0};  //256 bits data format is used for transmission, 4 MSB bits are shifted out
@@ -243,7 +250,7 @@ always@(*) begin
          RECV_DATA: begin
             DATA_reg_next = {DATA_reg[(`JTAG_DATA_REQ_WIDTH-4)-1:0],BIST_DIN};     //192 bits data fromat is used for receiving, 4 new bits at LSB
             if(BIST_COMMAND == `BIST_OP_SHIFT_DATA) begin
-               if(count == 47) begin
+               if(count == 47) begin // 4*48 = 192 bits; it receives 4 bits BIST transimission per clock cycles
                   state_next = WRITE_SRAM;
                   count_next = 0;
                end
