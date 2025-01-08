@@ -21,7 +21,7 @@ sources:
   - target: asic
     files:
       - rtl/sp_ram_asic.v
-      - rtl/dp_ram_asic.v
+      - rtl/dp_ram_asic.sv
       
 export_include_dirs:
   - include/
