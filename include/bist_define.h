@@ -6,8 +6,8 @@
 `define SRAM_WRAPPER_BUS_WIDTH 4
 
 // data reg, specific to Cincoranch specs
-`define JTAG_DATA_REQ_WIDTH 192
-`define JTAG_DATA_RES_WIDTH 256
+`define JTAG_DATA_REQ_WIDTH 320
+`define JTAG_DATA_RES_WIDTH 384
 
 // generic BIST defines
 `define BIST_OP_WIDTH 4

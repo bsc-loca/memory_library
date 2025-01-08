@@ -128,8 +128,8 @@ endgenerate
 reg [3:0]ID_reg, ID_reg_next;      //SRAM ID is set to 4 bits
 reg [7:0]BSEL_reg, BSEL_reg_next;  //bit select is set to 8 bits, not used 
 reg [15:0]ADDR_reg, ADDR_reg_next; //address is fixed to 16 bits 
-reg [`JTAG_DATA_REQ_WIDTH-1:0]DATA_reg;             //receiving data is 192 bits
-reg [`JTAG_DATA_RES_WIDTH-1:0]DATA_OUT_reg;         //transmitting data is 256 bits
+reg [`JTAG_DATA_REQ_WIDTH-1:0]DATA_reg;             //receiving data is 320 bits
+reg [`JTAG_DATA_RES_WIDTH-1:0]DATA_OUT_reg;         //transmitting data is 384 bits
 reg [512-1:0] DATA_reg_next, DATA_OUT_reg_next; //maximum width of an SRAM to resolve lint issues (differen SRAMS has different widths)
 
 reg BIST_RDWEN_reg, BIST_RDWEN_next;
@@ -137,8 +137,8 @@ reg BIST_EN_reg, BIST_EN_next;
 //wires
 reg [3:0] BIST_DOUT_reg, BIST_DOUT_next; //4 bits BIST transmission
 //counter variables
-reg [5:0]count;
-reg [6:0]count_next;
+reg [6:0]count;
+reg [7:0]count_next;
 
 localparam [3:0] 
     IDLE = 4'd0,
@@ -246,10 +246,10 @@ always@(*) begin
             count_next    = 0;
             state_next     = SEND_DATA;
          end
-         SEND_DATA: begin //sending data after reading SRAM to the JTAG (64*4 = 256 bits)
-               if((BIST_COMMAND == `BIST_OP_SHIFT_DATA) && (count < 63)) begin
-                  BIST_DOUT_next     = DATA_OUT_reg[`JTAG_DATA_RES_WIDTH-1: `JTAG_DATA_RES_WIDTH-4]; //255:252
-                  DATA_OUT_reg_next  = {DATA_OUT_reg[(`JTAG_DATA_RES_WIDTH-4)-1:0], 4'b0};  //256 bits data format is used for transmission, 4 MSB bits are shifted out
+         SEND_DATA: begin //sending data after reading SRAM to the JTAG (96*4 = 384 bits)
+               if((BIST_COMMAND == `BIST_OP_SHIFT_DATA) && (count < 95)) begin
+                  BIST_DOUT_next     = DATA_OUT_reg[`JTAG_DATA_RES_WIDTH-1: `JTAG_DATA_RES_WIDTH-4]; //383:380
+                  DATA_OUT_reg_next  = {DATA_OUT_reg[(`JTAG_DATA_RES_WIDTH-4)-1:0], 4'b0};  //384 bits data format is used for transmission, 4 MSB bits are shifted out
                   count_next     = count + 1'b1;
                   state_next     = SEND_DATA;
                end 
@@ -259,9 +259,9 @@ always@(*) begin
                end
          end
          RECV_DATA: begin
-            DATA_reg_next = {DATA_reg[(`JTAG_DATA_REQ_WIDTH-4)-1:0],BIST_DIN};     //192 bits data fromat is used for receiving, 4 new bits at LSB
+            DATA_reg_next = {DATA_reg[(`JTAG_DATA_REQ_WIDTH-4)-1:0],BIST_DIN};     //320 bits data fromat is used for receiving, 4 new bits at LSB
             if(BIST_COMMAND == `BIST_OP_SHIFT_DATA) begin
-               if(count == 47) begin // 4*48 = 192 bits; it receives 4 bits BIST transmission per clock cycles
+               if(count == 79) begin // // 4*80 = 320 bits 
                   state_next = WRITE_SRAM;
                   count_next = 0;
                end
@@ -297,18 +297,18 @@ always@(posedge clk) begin
    else begin
       BSEL_reg       <= BSEL_reg_next;
       ADDR_reg       <= ADDR_reg_next;
-      count          <= count_next[5:0];
+      count          <= count_next[6:0];
       BIST_EN_reg    <= BIST_EN_next;
       BIST_RDWEN_reg <= BIST_RDWEN_next;
       BIST_DOUT_reg  <= BIST_DOUT_next;
       ID_reg         <= ID_reg_next;
-      DATA_reg       <= DATA_reg_next[`JTAG_DATA_REQ_WIDTH-1:0];      //192 bits data fromat is used for receiving
-      DATA_OUT_reg   <= DATA_OUT_reg_next[`JTAG_DATA_RES_WIDTH-1:0];  //256 bits data format is used for transmission
+      DATA_reg       <= DATA_reg_next[`JTAG_DATA_REQ_WIDTH-1:0];      //320 bits data fromat is used for receiving
+      DATA_OUT_reg   <= DATA_OUT_reg_next[`JTAG_DATA_RES_WIDTH-1:0];  //384 bits data format is used for transmission
    end
 end
 
-assign BIST_DOUT = DATA_OUT_reg[`JTAG_DATA_RES_WIDTH-1: `JTAG_DATA_RES_WIDTH-4];  //252:252, only 4 MSB bits will be transfered at a time
-assign BIST_2_SRAM_DATA   = {{320{1'b0}},DATA_reg[`JTAG_DATA_REQ_WIDTH-1:0]};   //making (320+192) = 512 bits (max width) to resolve lint issues
+assign BIST_DOUT = DATA_OUT_reg[`JTAG_DATA_RES_WIDTH-1: `JTAG_DATA_RES_WIDTH-4];  //383:380, only 4 MSB bits will be transfered at a time
+assign BIST_2_SRAM_DATA   = {{320{1'b0}},DATA_reg[`JTAG_DATA_REQ_WIDTH-1:0]};     //making (192+320) = 512 bits (max width) to resolve lint issues
 assign ADDRESS    = ADDR_reg;
 assign BIST_RDWEN = BIST_RDWEN_reg;
 assign BIST_EN    = BIST_EN_reg;
