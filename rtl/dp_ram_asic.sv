@@ -41,7 +41,7 @@ wire [DATA_WIDTH-1:0] tmp_QA;
 
 // write_bypass on read/write collisions to the same address
 //NOTE: keep bypassed data constant until a new read operation arrives!
-always @(posedge CLKA) begin
+always_ff @(posedge CLKA) begin
     if(!rst_n) begin
         read_write_collision_r <= 1'b0;
     end else begin
@@ -57,7 +57,7 @@ end
 
 // Assertions
 logic rw_collision_d;
-always @(posedge CLKA)
+always_ff @(posedge CLKA)
     rw_collision_d <= CEA && CEB && (AA == AB);
 
 property check_signal_no_unknown;
