@@ -33,7 +33,9 @@ module sp_ram
     parameter DATA_WIDTH=1,
     parameter INSTANTIATE_ASIC_MEMORY = 1, // 0: simulation/FPGA model; 1: ASIC physical memories
     parameter INIT_MEMORY_ON_RESET = 0,
-    parameter SRAM_CHUNK_ID = 8'h00
+    parameter COL_WIDTH = 1,       // Byte-wide write width. Required to map to BRAMs
+    parameter SRAM_CHUNK_ID = 8'h00,
+    localparam NUM_COL=DATA_WIDTH/COL_WIDTH
 )(
     input wire [7:0] SR_ID,
     input wire clk,
@@ -42,7 +44,7 @@ module sp_ram
     input wire rdw_en,  // 1=WR and 0=RD
     input wire  [ADDR_WIDTH-1  : 0]  addr,
     input wire  [DATA_WIDTH-1  : 0]  data_in,
-    input wire  [DATA_WIDTH-1  : 0]  data_mask_in,
+    input wire  [NUM_COL   -1  : 0]  data_mask_in,
     output wire [DATA_WIDTH-1  : 0]  data_out,
 
     // sram interface
@@ -50,6 +52,17 @@ module sp_ram
     input wire  [`BIST_OP_WIDTH-1:0] rtap_srams_bist_command,
     input wire  [`SRAM_WRAPPER_BUS_WIDTH-1:0] rtap_srams_bist_data
 );
+
+  // ----------------------------------------------------------------
+  // compile-time checks:
+  // - DATA_WIDTH must be divisible by COL_WIDTH
+  // ----------------------------------------------------------------
+  generate
+    if ((DATA_WIDTH % COL_WIDTH) != 0) begin
+       $fatal (1, "Error: DATA_WIDTH must be divisible by COL_WIDTH.");
+    end
+  endgenerate
+
 
 `ifdef PRINT_MEMORY_LIST
   initial begin
@@ -60,9 +73,10 @@ module sp_ram
   end
 `endif
 
+
 reg [ADDR_WIDTH-1:0] mux_addr;    
 reg [DATA_WIDTH-1:0] mux_data_in;     
-reg [DATA_WIDTH-1:0] mux_data_mask_in;
+reg [NUM_COL   -1:0] mux_data_mask_in;
 reg mux_rdw_en;     
 reg mux_clk_en; 
 
@@ -82,13 +96,21 @@ assign BIST_DIN = rtap_srams_bist_data;
 assign srams_rtap_data = BIST_DOUT;
 
 generate if (INSTANTIATE_ASIC_MEMORY == 1) begin
+
+    wire [DATA_WIDTH-1:0] mux_data_mask_in_replicate;
+
+    genvar i;
+    for (i = 0; i < NUM_COL; i = i + 1) begin : replicate_bits
+        assign mux_data_mask_in_replicate[COL_WIDTH*i +: COL_WIDTH] = {COL_WIDTH{mux_data_mask_in[i]}};
+    end
+
      sp_ram_asic #(
       .ADDR_WIDTH(ADDR_WIDTH), 
       .DATA_WIDTH(DATA_WIDTH)
     ) sp_ram_asic(
        .A     (mux_addr),
        .DI    (mux_data_in),
-       .BW    (mux_data_mask_in), 
+       .BW    (mux_data_mask_in_replicate),
        .CLK   (clk),
        .CE    (mux_clk_en),
        .RDWEN (mux_rdw_en),
@@ -98,6 +120,7 @@ end
 else begin
      sp_ram_model #(
       .ADDR_WIDTH(ADDR_WIDTH), 
+      .COL_WIDTH(COL_WIDTH),
       .DATA_WIDTH(DATA_WIDTH)
      ) sp_ram_model (
        .A     (mux_addr),
@@ -351,14 +374,14 @@ begin
    if (!init_done) begin   
        mux_addr         = bist_index;     
        mux_data_in      = {DATA_WIDTH{1'b0}};    
-       mux_data_mask_in = {DATA_WIDTH{1'b1}};
+       mux_data_mask_in = {NUM_COL{1'b1}};
        mux_rdw_en       = 1'b1;   
        mux_clk_en       = 1'b1; 
    end
    else if(BIST_EN) begin
        mux_addr         = ADDRESS[ADDR_WIDTH-1:0];     
        mux_data_in      = BIST_2_SRAM_DATA[DATA_WIDTH-1:0];     
-       mux_data_mask_in = {DATA_WIDTH{1'b1}};  //BSEL_reg; 
+       mux_data_mask_in = {NUM_COL{1'b1}};  //BSEL_reg;
        mux_rdw_en       = BIST_RDWEN; 
        mux_clk_en       = BIST_EN;
    end else begin
