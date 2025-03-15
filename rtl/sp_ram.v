@@ -54,14 +54,13 @@ module sp_ram
 );
 
   // ----------------------------------------------------------------
-  // compile-time checks:
   // - DATA_WIDTH must be divisible by COL_WIDTH
   // ----------------------------------------------------------------
-  generate
+  initial begin
     if ((DATA_WIDTH % COL_WIDTH) != 0) begin
        $fatal (1, "Error: DATA_WIDTH must be divisible by COL_WIDTH.");
     end
-  endgenerate
+  end
 
 
 `ifdef PRINT_MEMORY_LIST
