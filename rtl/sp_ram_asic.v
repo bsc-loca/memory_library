@@ -28,4 +28,14 @@ module sp_ram_asic #(
    output wire [DATA_WIDTH-1  : 0]  DO
 );   
 
+`ifdef SIMULATION
+module ASIC_SP_RAM_UNDEF #(parameter DEPTH = 256, parameter DATA_WIDTH = 32);
+    initial begin
+        $display("Instance Name: %m");  // Prints the hierarchical instance name
+        $error("Parameters: DEPTH: %d, \tDATA_WIDTH: %d", DEPTH, DATA_WIDTH);  // Prints the parameters
+        $finish;
+    end
+endmodule
+`endif  // SIMULATION
+
 endmodule

@@ -66,4 +66,14 @@ assign read_write_collision = (CEA && CEB && (AA == AB));
 assign QA = read_write_collision_r ? ((tmp_QA & ~mux_data_mask_in_r) | (mux_data_in_r & mux_data_mask_in_r)) : tmp_QA;
 // ----------------------------------------------------------------------------
 
+`ifdef SIMULATION
+module ASIC_2P_RAM_UNDEF #(parameter DEPTH = 256, parameter DATA_WIDTH = 32);
+    initial begin
+        $display("Instance Name: %m");  // Prints the hierarchical instance name
+        $error("Parameters: DEPTH: %d, \tDATA_WIDTH: %d", DEPTH, DATA_WIDTH);  // Prints the parameters
+        $finish;
+    end
+endmodule
+`endif  // SIMULATION
+
 endmodule
