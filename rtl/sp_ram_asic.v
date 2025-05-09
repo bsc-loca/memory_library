@@ -28,6 +28,15 @@ module sp_ram_asic #(
    output wire [DATA_WIDTH-1  : 0]  DO
 );   
 
+localparam DEPTH = 2 ** ADDR_WIDTH;
+generate
+    begin : ram_undef
+        ASIC_SP_RAM_UNDEF  #(.DEPTH(DEPTH), .DATA_WIDTH(DATA_WIDTH))  UNDEF_RAM ();
+    end
+endgenerate
+
+endmodule
+
 `ifdef SIMULATION
 module ASIC_SP_RAM_UNDEF #(parameter DEPTH = 256, parameter DATA_WIDTH = 32);
     initial begin
@@ -37,5 +46,3 @@ module ASIC_SP_RAM_UNDEF #(parameter DEPTH = 256, parameter DATA_WIDTH = 32);
     end
 endmodule
 `endif  // SIMULATION
-
-endmodule

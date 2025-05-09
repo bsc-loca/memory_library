@@ -66,6 +66,15 @@ assign read_write_collision = (CEA && CEB && (AA == AB));
 assign QA = read_write_collision_r ? ((tmp_QA & ~mux_data_mask_in_r) | (mux_data_in_r & mux_data_mask_in_r)) : tmp_QA;
 // ----------------------------------------------------------------------------
 
+localparam DEPTH = 2 ** ADDR_WIDTH;
+generate
+    begin : ram_undef   //should not reach here at all 
+        ASIC_2P_RAM_UNDEF  #(.DEPTH(DEPTH), .DATA_WIDTH(DATA_WIDTH))  UNDEF_RAM();
+    end
+endgenerate
+
+endmodule
+
 `ifdef SIMULATION
 module ASIC_2P_RAM_UNDEF #(parameter DEPTH = 256, parameter DATA_WIDTH = 32);
     initial begin
@@ -75,5 +84,3 @@ module ASIC_2P_RAM_UNDEF #(parameter DEPTH = 256, parameter DATA_WIDTH = 32);
     end
 endmodule
 `endif  // SIMULATION
-
-endmodule
