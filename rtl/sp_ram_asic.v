@@ -29,11 +29,10 @@ module sp_ram_asic #(
 );   
 
 localparam DEPTH = 2 ** ADDR_WIDTH;
-generate
-    begin : ram_undef
-        ASIC_SP_RAM_UNDEF  #(.DEPTH(DEPTH), .DATA_WIDTH(DATA_WIDTH))  UNDEF_RAM ();
-    end
-endgenerate
+
+`ifdef SIMULATION
+ASIC_SP_RAM_UNDEF  #(.DEPTH(DEPTH), .DATA_WIDTH(DATA_WIDTH))  UNDEF_RAM ();
+`endif
 
 endmodule
 
