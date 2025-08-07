@@ -67,11 +67,10 @@ assign QA = read_write_collision_r ? ((tmp_QA & ~mux_data_mask_in_r) | (mux_data
 // ----------------------------------------------------------------------------
 
 localparam DEPTH = 2 ** ADDR_WIDTH;
-generate
-    begin : ram_undef   //should not reach here at all 
-        ASIC_2P_RAM_UNDEF  #(.DEPTH(DEPTH), .DATA_WIDTH(DATA_WIDTH))  UNDEF_RAM();
-    end
-endgenerate
+
+`ifdef SIMULATION
+ASIC_2P_RAM_UNDEF  #(.DEPTH(DEPTH), .DATA_WIDTH(DATA_WIDTH))  UNDEF_RAM();
+`endif
 
 endmodule
 
